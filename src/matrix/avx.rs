@@ -245,29 +245,36 @@ impl Mul for Matrix4x4 {
         let a = &self;
         let b = &rhs;
 
-        unsafe {
-            let mut c0 = _mm256_mul_pd(_mm256_broadcast_sd(&a[0][0]), b[0].0);
-            let mut c1 = _mm256_mul_pd(_mm256_broadcast_sd(&a[1][0]), b[0].0);
-            let mut c2 = _mm256_mul_pd(_mm256_broadcast_sd(&a[2][0]), b[0].0);
-            let mut c3 = _mm256_mul_pd(_mm256_broadcast_sd(&a[3][0]), b[0].0);
-
-            c0 = _mm256_fmadd_pd(_mm256_broadcast_sd(&a[0][1]), b[1].0, c0);
-            c1 = _mm256_fmadd_pd(_mm256_broadcast_sd(&a[1][1]), b[1].0, c1);
-            c2 = _mm256_fmadd_pd(_mm256_broadcast_sd(&a[2][1]), b[1].0, c2);
-            c3 = _mm256_fmadd_pd(_mm256_broadcast_sd(&a[3][1]), b[1].0, c3);
-
-            c0 = _mm256_fmadd_pd(_mm256_broadcast_sd(&a[0][2]), b[2].0, c0);
-            c1 = _mm256_fmadd_pd(_mm256_broadcast_sd(&a[1][2]), b[2].0, c1);
-            c2 = _mm256_fmadd_pd(_mm256_broadcast_sd(&a[2][2]), b[2].0, c2);
-            c3 = _mm256_fmadd_pd(_mm256_broadcast_sd(&a[3][2]), b[2].0, c3);
-
-            c0 = _mm256_fmadd_pd(_mm256_broadcast_sd(&a[0][3]), b[3].0, c0);
-            c1 = _mm256_fmadd_pd(_mm256_broadcast_sd(&a[1][3]), b[3].0, c1);
-            c2 = _mm256_fmadd_pd(_mm256_broadcast_sd(&a[2][3]), b[3].0, c2);
-            c3 = _mm256_fmadd_pd(_mm256_broadcast_sd(&a[3][3]), b[3].0, c3);
-
-            Matrix4x4([Vector4(c0), Vector4(c1), Vector4(c2), Vector4(c3)])
-        }
+        Matrix4x4([
+            Vector4(unsafe {
+                let mut c0 = _mm256_mul_pd(_mm256_broadcast_sd(&a[0][0]), b[0].0);
+                c0 = _mm256_fmadd_pd(_mm256_broadcast_sd(&a[0][1]), b[1].0, c0);
+                c0 = _mm256_fmadd_pd(_mm256_broadcast_sd(&a[0][2]), b[2].0, c0);
+                c0 = _mm256_fmadd_pd(_mm256_broadcast_sd(&a[0][3]), b[3].0, c0);
+                c0
+            }),
+            Vector4(unsafe {
+                let mut c1 = _mm256_mul_pd(_mm256_broadcast_sd(&a[1][0]), b[0].0);
+                c1 = _mm256_fmadd_pd(_mm256_broadcast_sd(&a[1][1]), b[1].0, c1);
+                c1 = _mm256_fmadd_pd(_mm256_broadcast_sd(&a[1][2]), b[2].0, c1);
+                c1 = _mm256_fmadd_pd(_mm256_broadcast_sd(&a[1][3]), b[3].0, c1);
+                c1
+            }),
+            Vector4(unsafe {
+                let mut c2 = _mm256_mul_pd(_mm256_broadcast_sd(&a[2][0]), b[0].0);
+                c2 = _mm256_fmadd_pd(_mm256_broadcast_sd(&a[2][1]), b[1].0, c2);
+                c2 = _mm256_fmadd_pd(_mm256_broadcast_sd(&a[2][2]), b[2].0, c2);
+                c2 = _mm256_fmadd_pd(_mm256_broadcast_sd(&a[2][3]), b[3].0, c2);
+                c2
+            }),
+            Vector4(unsafe {
+                let mut c3 = _mm256_mul_pd(_mm256_broadcast_sd(&a[3][0]), b[0].0);
+                c3 = _mm256_fmadd_pd(_mm256_broadcast_sd(&a[3][1]), b[1].0, c3);
+                c3 = _mm256_fmadd_pd(_mm256_broadcast_sd(&a[3][2]), b[2].0, c3);
+                c3 = _mm256_fmadd_pd(_mm256_broadcast_sd(&a[3][3]), b[3].0, c3);
+                c3
+            }),
+        ])
     }
 }
 
