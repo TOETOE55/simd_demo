@@ -112,33 +112,36 @@ fn partition(arr: &mut [i32]) -> usize {
         let len = arr.len();
         let (idx, pivot) = get_pivot(arr);
         arr.swap_unchecked(idx, len - 1);
-        let part = if len <= 2 * S {
-            normal_partition(arr, pivot)
-        } else {
-            vector_partition(arr, pivot)
-        };
+        // let part = if len <= 2 * S {
+        //     normal_partition(arr, pivot)
+        // } else {
+        //     vector_partition(arr, pivot)
+        // };
+        let part = vector_partition(arr, pivot);
         arr.swap_unchecked(part, len - 1);
         part
     }
 }
 
-#[inline(always)]
-fn normal_partition(arr: &mut [i32], pivot: i32) -> usize {
-    let mut i = 0;
-    for j in 0..arr.len() - 1 {
-        unsafe {
-            if *arr.get_unchecked(j) <= pivot {
-                arr.swap_unchecked(i, j);
-                i += 1;
-            }
-        }
-    }
+// #[inline(always)]
+// fn normal_partition(arr: &mut [i32], pivot: i32) -> usize {
+//     let mut i = 0;
+//     for j in 0..arr.len() - 1 {
+//         unsafe {
+//             if *arr.get_unchecked(j) <= pivot {
+//                 arr.swap_unchecked(i, j);
+//                 i += 1;
+//             }
+//         }
+//     }
 
-    i
-}
+//     i
+// }
 
+/// Safety
+/// - arr.len() > 2*S
 #[inline(always)]
-unsafe fn vector_partition(arr: &mut [i32], pivot: i32) -> usize {
+pub unsafe fn vector_partition(arr: &mut [i32], pivot: i32) -> usize {
     let mut left = 0;
     let mut right = arr.len() - 1;
     unsafe {
