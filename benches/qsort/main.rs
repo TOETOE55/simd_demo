@@ -20,7 +20,6 @@ pub fn qsort_bench(c: &mut Criterion) {
             );
         });
 
-    
         group.bench_with_input(BenchmarkId::new("normal", count), &xs, |b, xs| {
             b.iter_batched(
                 || xs.clone(),

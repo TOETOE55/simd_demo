@@ -22,3 +22,7 @@ harness = false
 [[bench]]
 name = "qsort"
 harness = false
+
+[[bench]]
+name = "num_parse"
+harness = false

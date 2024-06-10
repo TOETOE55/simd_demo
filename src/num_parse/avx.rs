@@ -4,6 +4,7 @@ use std::arch::x86_64::{
     _mm_extract_epi32, _mm_madd_epi16, _mm_maddubs_epi16, _mm_set_epi16, _mm_set_epi8,
 };
 
+#[inline(always)]
 pub fn parse_u64(s: &str) -> Option<u64> {
     let bytes = s.as_bytes();
 
