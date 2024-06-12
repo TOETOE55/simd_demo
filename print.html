@@ -1,0 +1,1044 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>近来学点SIMD如何？</title>
+        <meta name="robots" content="noindex" />
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="foreword.html"><strong aria-hidden="true">1.</strong> 近来学点SIMD如何？</a></li><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">2.</strong> SIMD简单介绍</a></li><li class="chapter-item expanded "><a href="x86simd.html"><strong aria-hidden="true">3.</strong> x86 SIMD基础</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="instruction.html"><strong aria-hidden="true">3.1.</strong> 指令集</a></li><li class="chapter-item expanded "><a href="intrinsic.html"><strong aria-hidden="true">3.2.</strong> SIMD intrinsic</a></li></ol></li><li class="chapter-item expanded "><a href="algorithm.html"><strong aria-hidden="true">4.</strong> 算法</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="matmul.html"><strong aria-hidden="true">4.1.</strong> 矩阵乘法</a></li><li class="chapter-item expanded "><a href="parse_num.html"><strong aria-hidden="true">4.2.</strong> parse number</a></li><li class="chapter-item expanded "><a href="qsort.html"><strong aria-hidden="true">4.3.</strong> 快排</a></li></ol></li><li class="chapter-item expanded "><a href="conclusion.html"><strong aria-hidden="true">5.</strong> 未来畅想</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">近来学点SIMD如何？</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="近来学点simd如何"><a class="header" href="#近来学点simd如何">近来学点SIMD如何？</a></h1>
+<p>之前听说过SIMD，但一直并没有实操过。这几天心血来潮稍微了解了下，感觉开拓了一个新的世界，像在我脑海里建立了一种新的编程模式。</p>
+<p>于是在这里记录一波我最近关于SIMD的所学所想。</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="simd简单介绍"><a class="header" href="#simd简单介绍">SIMD简单介绍</a></h1>
+<p>SIMD是Single Instruction, Multiple Data的缩写，是现代CPU提供的一种同时（<em>单条指令</em>）对多个数据进行操作的指令。如果说以前的指令提供的是<strong>标量计算</strong>的能力，那么SIMD提供的就是<strong>向量计算</strong>的能力。</p>
+<p>（还想补充一点的是，SIMD和超标量两种CPU能力是相互独立的，也就是说，SIMD的指令本身也可以像普通的标量计算的指令一样可以并行执行）</p>
+<p>目前两个主流的架构都提供了SIMD指令：</p>
+<ul>
+<li>x86: XMM, SSE, AVX</li>
+<li>arm: neon, SVE</li>
+<li>wasm: simd128</li>
+</ul>
+<p>我手头的电脑是11th Gen Intel(R) Core(TM) i7-1185G7 @ 3.00GHz（Tiger lake架构），所以后面便用x86中提供的SIMD指令来实现一些算法。</p>
+<p>至于为什么要自己写SIMD代码、直接使用CPU提供的SIMD的intrinsic呢？主要有几个原因：</p>
+<ol>
+<li>
+<p>目前大部分语言并没有对向量计算的抽象的能力，需要自己调用不同平台提供的SIMD函数（甚至自己写汇编）。</p>
+</li>
+<li>
+<p>编译器的自动向量化实在不够聪明（不过这也和语言本身没有类似特性有关），就算已经把代码写得十分“向量化”了，但生成的代码还是无法完全利用起SIMD的特性：</p>
+<pre><code class="language-c">for (int i = 0; i &lt; N; i+=8) {
+    sum += A[i];
+    sum += A[i+1];
+    sum += A[i+2];
+    sum += A[i+3];
+    sum += A[i+4];
+    sum += A[i+5];
+    sum += A[i+6];
+    sum += A[i+7];
+}
+</code></pre>
+<p>理论上循环体里只要编译成<code>vaddps  (%rax), %ymm0, %ymm0</code>，就可以对八个加法一块完成，但gcc -O3愣是编译成了（并没有向量化）：</p>
+<pre><code class="language-assembly">        # vaddss是AVX里的标量加法，只把寄存器低位的值相加
+        vaddss  (%rax), %xmm0, %xmm0
+        vaddss  4(%rax), %xmm0, %xmm0
+        vaddss  8(%rax), %xmm0, %xmm0
+        vaddss  12(%rax), %xmm0, %xmm0
+        vaddss  16(%rax), %xmm0, %xmm0
+        vaddss  20(%rax), %xmm0, %xmm0
+        vaddss  24(%rax), %xmm0, %xmm0
+        vaddss  28(%rax), %xmm0, %xmm0
+</code></pre>
+</li>
+<li>
+<p>各个平台的提供的SIMD指令都不一样（甚至单个平台内不同的SIMD指令集都不一样），几乎没有一套既通用、包含所有功能且有性能保证的可移植的SIMD接口使用。</p>
+</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="x86-simd基础"><a class="header" href="#x86-simd基础">x86 SIMD基础</a></h1>
+<p>相关教程</p>
+<ul>
+<li>
+<p><a href="https://www.codeproject.com/Articles/874396/Crunching-Numbers-with-AVX-and-AVX">Crunching Numbers with AVX and AVX2</a></p>
+</li>
+<li>
+<p><a href="https://www.youtube.com/watch?v=AT5nuQQO96o">SIMD and vectorization using AVX intrinsic functions (Tutorial)</a></p>
+</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h2 id="指令集"><a class="header" href="#指令集">指令集</a></h2>
+<p>首先简单过一下x86下SIMD的指令集都提供了什么功能：</p>
+<ol>
+<li>mmx:
+<ul>
+<li>引入了8个64bits的寄存器，可以表示2个32位整数，4个16位整数或者8个8位整数</li>
+<li>仅提供整数的向量计算</li>
+<li>1997年提出，Intel奔腾2之后开始支持，AMD在K6后支持</li>
+</ul>
+</li>
+<li>SSE(SSE, SSE2, SSE3, SSE4):
+<ul>
+<li>引入了16个128bits的寄存器（32位机器上只有8个），可以表示4个单精度浮点数（SSE1）；2个双精度浮点数，2个64位整数，4个32位整数，8个16位整数，16个8位整数（SSE2）。</li>
+<li>浮点和整数的向量运算都支持，</li>
+<li>1999年提出，Intel奔腾3之后开始支持，AMD在速龙XP后支持。SSE2在2001年提出，SSE2在01年，SSE3在04年，SSE4在06年。</li>
+</ul>
+</li>
+<li>AVX(AVX, AVX2, AVX512):
+<ul>
+<li>AVX引入了16个256bits的寄存器（32位机器上只有8个），AVX512则引入了32个512bits的寄存器和8个opmask寄存器。其中在AVX中，只能存浮点数，而在AVX2后则都支持整数。</li>
+<li>浮点和整数的向量运算都支持。而在AVX512还支持了mask运算，有了功能完整的permute操作blahblah。</li>
+<li>AVX在08年提出（第一代酷睿开始支持），AVX2在13年提出（第四代酷睿开始），AVX512在16年提出（第六代酷睿~第十一代酷睿，十二代之后就不支持了。。。反倒zen4还支持）。</li>
+</ul>
+</li>
+</ol>
+<p>说实话，我觉得AVX512才是满血的AVX指令，但可惜十二代酷睿就不支持了。。。之前的permute操作只能以128bits为单位来做；没有mask_xx操作，没法很方便单独操作向量里的其中某部分；AVX512还支持神器compressstore/expendload操作，可以把向量“部分”写到内存里，或者是“部分”读到寄存器里，可以避免越界。</p>
+<p>（另外之前AVX512指令带来的CPU降频的问题，在十代酷睿之后就解决了）</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="simd-intrinsic"><a class="header" href="#simd-intrinsic">SIMD intrinsic</a></h1>
+<p>我们当然可以直接手写SIMD的汇编指令，但没必要。编译器提供了一些几乎能直接映射到汇编的intrinsic函数，抽象层次稍微高一点，比如我们不用关心寄存器如何分配。</p>
+<p>我们在C里只要<code>#include&lt;immintrin.h&gt;</code>就可以使用所有的SIMD intrinsic函数了。在rust中，x86的intrinsic函数则放在<code>core::arch::x86_64</code>中（都假定是64位系统了）。</p>
+<h2 id="数据类型"><a class="header" href="#数据类型">数据类型</a></h2>
+<p>目前x86(x86-64)下的SIMD数据类型有以下这些，都对应着对应位数的寄存器：</p>
+<ul>
+<li><code>__m64</code>: 表示1个64位整数，2个32位整数，4个16位整数或8个8位整数</li>
+<li><code>__m128</code>: 表示4个单精度浮点数</li>
+<li><code>__m128d</code>: 表示2个双精度浮点数（d是double，双精度的意思）</li>
+<li><code>__m128i</code>：2个64位整数，4个32位整数，8个16位整数，16个8位整数。（i是integer，整数的意思）</li>
+<li><code>__m256</code>: 表示8个单精度浮点数</li>
+<li><code>__m256d</code>: 表示4个双精度浮点数</li>
+<li><code>__m256i</code>: 4个64位整数blahblah...</li>
+<li><code>__m512</code>, <code>__m512d</code>, <code>__m512i</code>: 同理</li>
+<li><code>__m128bh</code>, <code>__m256bh</code>, <code>__m512bh</code>: 半精度浮点数的SIMD类型（bh是brain floating point）</li>
+</ul>
+<p>比如说<code>__m256</code>的内存布局和<code>float[8]</code>或者说<code>[f32;8]</code>是一致的（只是对齐不一样），长这样，其中每个格子是为32位，为单精度浮点数：</p>
+<pre><code class="language-text"> ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │  a7   │  a6   │  a5   │  a4   │  a3   │  a2   │  a1   │  a0   │ 
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+     7       6       5       4       3       2       1       0   
+</code></pre>
+<p>为了方便与整数的高低位对应，这里也把低位放在右边。（一般书写顺序整数的位数由低到高也是从右到左，有点rtl文字的意味了）</p>
+<p>注意，<code>__m128</code>的对齐为16个字节，<code>__m256</code>对齐为32个字节，<code>__m512</code>对齐为64个字节，而<code>malloc</code>函数分配的内存则按<code>size_t</code>的对齐（一般为8字节），所以如果要分配这些类型的内存则需要<code>aligned_alloc</code>函数。</p>
+<h2 id="函数"><a class="header" href="#函数">函数</a></h2>
+<p>所有的intrinsic函数可以在 <a href="https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html">Intel Intrinsics Guide</a>查到，不过你会看到一大堆长这样的函数<code>_mm256_add_epi32</code>, <code>_mm256_cvtepi32_ps</code>，第一眼会很懵逼。但这里的大多数函数都遵循一个命名规则：<code>_mm&lt;bit_width&gt;_&lt;op_name&gt;_&lt;data_ty&gt;</code></p>
+<ol>
+<li>bit_width：表示这个函数作用在多少位的向量上，比如<code>_mm256</code>则表示作用于256位的向量上。如果没标则默认是128位的。</li>
+<li>op_name：则是操作的名字，比如说<code>add</code>是加，<code>cvt</code>是转换，<code>load</code>是从内存加载等等。</li>
+<li>data_ty：表示向量中的数据类型是什么，比如<code>pd</code>是双精度浮点，<code>ps</code>是单精度浮点，<code>epi32</code>是32位有符号整数，<code>epu64</code>是64位有符号整数等等。</li>
+</ol>
+<p>这些intrinsic函数又可以分为几类：算术类，逻辑类，分量操作类，比较类，转换类，内存读写类，掩码类（AVX512专属）。我们来展开一下。</p>
+<h2 id="算术类逻辑类"><a class="header" href="#算术类逻辑类">算术类/逻辑类</a></h2>
+<p>算术类和逻辑类属于是最简单典型的操作了，大部分都很好理解，比如<code>_mm256_mul_ps</code>就是<code>__m256</code>中8个单精度浮点数同时相乘：</p>
+<pre><code class="language-text"> ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │  a7   │  a6   │  a5   │  a4   │  a3   │  a2   │  a1   │  a0   │   a
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                                 *
+ ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │  b7   │  b6   │  b5   │  b4   │  b3   │  b2   │  b1   │  b0   │   b
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                                 =
+ ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │ a7*b7 │ a6*b6 │ a5*b5 │ a4*b4 │ a3*b3 │ a2*b2 │ a1*b1 │ a0*b0 │  _mm256_mul_ps(a, b)
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+</code></pre>
+<p>而<code>_mm256_and_ps</code>顾名思义，就是<code>_mm256_mul_ps</code>中8个单精度浮点数同时逻辑与了。不过我们可以关注一下这些指令的延迟和吞吐，比如说<code>_mm256_mul_ps</code>在Intel Intrinsics guide中上说在Icelake架构中，延迟是4（4个周期完成），吞吐量（IPC）为2（一个周期内可以处理两条指令）。不过。</p>
+<p>这里额外介绍一个也很常用的运算，融合乘加，一个指令同时完成乘法和加法。比如<code>_mm256_fmadd_ps</code>接受三个<code>__m256</code>向量<code>a</code>, <code>b</code>, <code>c</code>，每个分量上同时进行<code>a[i] * b[i] + c[i]</code>运算：</p>
+<pre><code class="language-text"> ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │  a7   │  a6   │  a5   │  a4   │  a3   │  a2   │  a1   │  a0   │   a
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                                 *
+ ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │  b7   │  b6   │  b5   │  b4   │  b3   │  b2   │  b1   │  b0   │   b
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                                 +
+ ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │  c7   │  c6   │  c5   │  c4   │  c3   │  c2   │  c1   │  c0   │   c
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                                 =
+ ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │ a7*b7 │ a6*b6 │ a5*b5 │ a4*b4 │ a3*b3 │ a2*b2 │ a1*b1 │ a0*b0 │  _mm256_fmadd_ps(a, b, c)
+ │  +c7  │  +c6  │  +c5  │  +c4  │  +c3  │  +c2  │  +c1  │  +c0  │
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+</code></pre>
+<p>但其实这和<code>_mm256_mul_ps</code>具有同样的延迟和吞吐，而且这是一个操作，会比分别乘完再加少一次舍入误差——会更加精确。</p>
+<p>算术类除了加减乘除，其实还有一些数学函数，比如<code>sqrt</code>/三角函数啥的（竟然把这些都做进了电路里，真狠啊）。还有一些不是按对应分量的运算，比如说水平加法<code>hadd</code>，点乘<code>dp</code>等等。这里便不展开了。</p>
+<h2 id="分量操作类"><a class="header" href="#分量操作类">分量操作类</a></h2>
+<p>分量操作类，顾名思义就是用来操作向量中的分量的，比如说分量位置的移动，分量的读取修改等。这也是SIMD中十分重要的一种运算。其中最常用的操作是<code>permute</code>排列操作，排列操作也有很多种。</p>
+<p>最通用的排列是<code>permutexvar</code>(AVX512引入)操作，比如<code>_m256_permutexvar_ps</code>操作，接受一个idx向量，和一个被排列向量，每个分量进行索引操作<code>a[ix]</code>操作：</p>
+<pre><code class="language-text"> ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │  i7   │  i6   │  i5   │  i4   │  i3   │  i2   │  i1   │  i0   │   idx
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                                []
+ ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │  a7   │  a6   │  a5   │  a4   │  a3   │  a2   │  a1   │  a0   │   a
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                                 =
+ ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │ a[i7] │ a[i6] │ a[i5] │ a[i4] │ a[i3] │ a[i2] │ a[i1] │ a[i0] │  _m256_permutexvar_ps(idx, a)
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+</code></pre>
+<p>这个在Icelake架构下延迟为3，IPC为1，吞吐量要比乘法加法要低一些。</p>
+<p>除了<code>permutexvar</code>这些名字里带var的操作（即用向量本身做索引）以外，还有些不带var的<code>permute</code>操作，通过一个8位的<strong>常量</strong>来表示索引向量，比如<code>_mm_permute_ps(a, 0b11_01_01_10)</code>：</p>
+<pre><code class="language-text">┌───────┬───────┬───────┬───────┐ 
+│  a3   │  a2   │  a1   │  a0   │   a
+└───────┴───────┴───────┴───────┘ 
+   11      01      01       10
+┌───────┬───────┬───────┬───────┐ 
+│ a[3]  │ a[1]  │ a[1]  │ a[2]  │   _mm_permute_ps(a, 0b11_01_01_10)
+└───────┴───────┴───────┴───────┘
+</code></pre>
+<p>这个操作在Icelake架构中，延迟只有1，比上面的<code>permutexvar</code>快不少。但这种操作挺弱鸡，只能在128位的数据内进行排序——在AVX里有128位的通道（lane）和256位的通道，在一个通道中排列的效率会更高（再补充一点，<code>permutexvar</code>里的<code>x</code>是across，也就是跨通道的意思）。如果在超过一个128位通道的向量中进行排列，相当于分别对每个128位的部分都进行同样的操作，比如说<code>_mm256_permute_ps(a, 0b11_01_01_10)</code>：</p>
+<pre><code class="language-text">┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+│  a7   │  a6   │  a5   │  a4   │  a3   │  a2   │  a1   │  a0   │   a
+└───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                                   11      01      01       10
+┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+│  a[7] │  a[5] │  a[5] │  a[6] │ a[3]  │ a[1]  │ a[1]  │ a[2]  │   _mm256_permute_ps(a, 0b11_01_01_10)
+└───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘
+注意这里下标+4了，也就是0b100
+</code></pre>
+<p>除了<code>permute</code>以外，还有其它操作，比如<code>shuffle</code>/<code>blend</code>操作，这里就不一一展开了。</p>
+<h2 id="比较类"><a class="header" href="#比较类">比较类</a></h2>
+<p>比较的操作也是比较直观的，就是在每个分量上进行比较，如果为true分量上为全1，为false则分量为0。</p>
+<p>举个具体的例子，<code>_mm256_cmp_ps(a, b, _CMP_LE_UQ)</code>，其中第三个参数是个常量，表示比较的操作，其中<code>U</code>表示不比较<code>nan</code>（如果要比较的话用<code>O</code>），而<code>Q</code>表示quiet（如果关心signal浮点数的话则用<code>S</code>）。其它比较运算可以看intel Intrinsics guide。</p>
+<pre><code class="language-text">┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+│  1.0  │  2.0  │  3.0  │  4.0  │  5.0  │  6.0  │  7.0  │  8.0  │   a
+└───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                      _CMP_LE_UQ 也就是 &lt;=
+┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+│  4.0  │  4.0  │  4.0  │  4.0  │  4.0  │  4.0  │  4.0  │  4.0  │   b
+└───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                                =
+┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+│  0x0  │  0x0  │  0x0  │  0x0  │0xFFFF │0xFFFF │0xFFFF │0xFFFF │   _mm256_cmp_ps(a, b, _CMP_LE_UQ)
+│       │       │       │       │  FFFF │  FFFF │  FFFF │  FFFF │
+└───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+</code></pre>
+<p>比较运算看起来比较简单，但是如果结合逻辑运算的话，就可以实现类似if-else的效果。举个例子，如果我们想在分量上计算：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let d = if a &lt;= b {
+    a + b
+} else {
+    a * b
+}
+<span class="boring">}</span></code></pre></pre>
+<p>我们就可以写成这样：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// 假设结果是这个
+// ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+// │  true │  true │  true │  true │ false │ false │ false │ false │  
+// └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘  
+let cmp = _mm256_cmp_ps(a, b, _CMP_LE_UQ);
+
+// 加完后将为false的给置0
+// ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+// │ a7+b7 │ a6+b6 │ a5+b5 │ a4+b4 │   0   │   0   │   0   │   0   │  
+// └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘  
+let add = __mm256_and_ps(cmp, _mm256_add_ps(a, b));
+
+// 加完后将为true的置0
+// ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+// │   0   │   0   │   0   │   0   │ a3*b3 │ a2*b2 │ a1*b1 │ a0*b0 │  
+// └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘  
+let mul = __mm256_notand_ps(cmp, _mm256_mul_ps(a, b));
+
+// 最后将结果合并
+// ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+// │ a7+b7 │ a6+b6 │ a5+b5 │ a4+b4 │ a3*b3 │ a2*b2 │ a1*b1 │ a0*b0 │  
+// └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘  
+let res = __mm256_or_ps(add, mul);
+<span class="boring">}</span></code></pre></pre>
+<p>虽然这里会产生多余的运算，把不必要计算的分量都计算了一遍，但这里不产生实际的分支，对分支预测十分友好，最终还是快的。</p>
+<p>那有没有不进行额外计算的办法呢？有！AVX-512里就引入了这样的方式！</p>
+<h2 id="掩码类"><a class="header" href="#掩码类">掩码类</a></h2>
+<p>AVX512的新指令里引入的掩码的概念，堪称神来之笔，为向量计算的表达力提升了一个台阶。目前分别为8位、16位、32位、64位的掩码<code>__mask8</code>, <code>__mask16</code>,<code>__mask32</code>, <code>__mask64</code>。掩码的每一位都映射到向量中的一个分量，一般来说0代表对应分量不参与运算，1代表对应分量参与运算。</p>
+<p>比如说<code>_m256_mask_add_ps</code>，接受3个向量<code>src</code>, <code>a</code>, <code>b</code>，其中<code>a</code>和<code>b</code>两个向量参与运算。当掩码对应位为0时，<em>不</em>进行运算，取<code>src</code>对应位，而当掩码对应位为1时，才进行运算：（注意，这里的掩码并不是常量）</p>
+<pre><code class="language-text"> ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │  s7   │  s6   │  s5   │  s4   │  s3   │  s2   │  s1   │  s0   │   src
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+     1       1       1       1       0       0       0      0        mask = 0b11110000
+ ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │  a7   │  a6   │  a5   │  a4   │  a3   │  a2   │  a1   │  a0   │   a
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                                 +
+ ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │  b7   │  b6   │  b5   │  b4   │  b3   │  b2   │  b1   │  b0   │   b
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                                 =
+ ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │ a7+b7 │ a6+b6 │ a5+b5 │ a4+b4 │  s3   │  s2   │  s1   │  s0   │   _m256_mask_add_ps(src, mask, a, b)
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘  
+ 
+ 如果想把不参与运算的分量置0，那还能把`mask`换成`maskz`，z就是zero的意思。
+</code></pre>
+<p>而AVX512中比较操作也返回一个掩码，而非一整个向量了，照搬之前的例子<code>_mm256_cmp_ps_mask(a, b, _CMP_LE_UQ)</code>：</p>
+<pre><code class="language-text">┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+│  1.0  │  2.0  │  3.0  │  4.0  │  5.0  │  6.0  │  7.0  │  8.0  │   a
+└───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                      _CMP_LE_UQ 也就是 &lt;=
+┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+│  4.0  │  4.0  │  4.0  │  4.0  │  4.0  │  4.0  │  4.0  │  4.0  │   b
+└───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                                =
+    1       1       1       1       0       0       0       0       _mm256_cmp_ps_mask(a, b, _CMP_LE_UQ) = 0b11110000
+</code></pre>
+<p>得到的mask又可以放到mask运算中去。我们可以用AVX512来重新写一下刚刚模拟if-else的例子：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// 0b11110000
+let cmp_mask = _mm256_cmp_ps_mask(a, b, _CMP_LE_UQ);
+
+// 只在掩码为1的分量上计算加法
+// ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+// │ a7+b7 │ a6+b6 │ a5+b5 │ a4+b4 │  a3   │  a2   │  a1   │  a0   │  
+// └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘  
+let add = __mm256_maskz_add_ps(a, cmp_mask, a, b);
+
+// 在掩码为0的分量上计算乘法
+// ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+// │ a7+b7 │ a6+b6 │ a5+b5 │ a4+b4 │ a3*b3 │ a2*b2 │ a1*b1 │ a0*b0 │  
+// └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘  
+let res = __mm256_maskz_mul_ps(add, !cmp_mask, a, b);
+<span class="boring">}</span></code></pre></pre>
+<p>用上了mask运算之后，除了减少了三次向量逻辑运算，同时一个mask指令里面还减少不必要的运算。</p>
+<p>有了掩码操作之后，化简了特别多的操作，在这里就不一一展开了（留一个到内存读写）。<strong>所以说AVX512 YYDS!!!!在此diss一下某牙膏厂</strong></p>
+<h2 id="转换类"><a class="header" href="#转换类">转换类</a></h2>
+<p>这里就展开不介绍了，反正就是分量数据类型的转换，操作名一般为<code>cvt</code>。</p>
+<h2 id="内存读写类"><a class="header" href="#内存读写类">内存读写类</a></h2>
+<p>最后再来展开一下内存读写相关的操作。最基础的读写操作就是<code>loadu</code>和<code>storeu</code>，从某个地址中读出或写入数据，这里u指的是unaligned，也就是不要求读出和写入的内存是对齐的——因为在新架构中，对不对齐已经不影响效率了。</p>
+<p>比如说<code>__m256 _m256_loadu_ps(float const * mem_addr)</code>，就是从<code>mem_addr</code>的地址开始<strong>连续</strong>读8个float——<strong>注意：这里要求这篇连续的内存区域是合法的，否则就是UB</strong>。<code>_m256_storeu_ps</code>也类似。</p>
+<p>不过很多时候，申请的内存并不都是16, 32, 64bytes的倍数，不一定能很好地被向量所“覆盖”，于是当我们想读入或者写入剩下几个字节的时候就会很麻烦（就得逐个读到向量中）。那有什么办法呢——<strong>答案还是AVX512！</strong> AVX512提供了两个神操作<code>expendloadu</code>和<code>compressstoreu</code>，搭配掩码就可以做到内存按向量分量部分读入和写入。</p>
+<p>举个例子：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// 这里只有7个f32，不能直接load到_m256中
+let mut arr: [f32; 7] = array_fn(|i| i as f32);
+
+// 但我们可以通过expendloadu只读低位7个f32到向量中，剩下一个分量置为0
+// ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+// │  0.0  │  6.0  │  5.0  │  4.0  │  3.0  │  2.0  │  1.0  │  0.0  │   v
+// └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+let v = _m256_maskz_expandloadu_ps(0b01111111, addr_of!(arr).cast());
+
+// 只将向量中7个数（除了第5个分量）写入`arr`中
+// ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+// │  0.0  │  6.0  │  5.0  │  3.0  │  2.0  │  1.0  │  0.0  │   arr
+// └───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+_m256_mask_compressstoreu_ps(addr_mut_of!(arr).cast(), 0b11101111, v);
+
+
+<span class="boring">}</span></code></pre></pre>
+<p>除了<code>load</code>和<code>store</code>，还介绍几个：</p>
+<ol>
+<li><code>broadcast</code>操作，把所有分量都置为一个值（参数）</li>
+<li><code>insert</code>操作，当然也可以直接<code>a[i] = x</code></li>
+<li><code>extract</code>操作，也可以直接通过<code>a[i]</code>读</li>
+<li><code>gather</code>操作，可以离散地读内存里的值，但不太好用。</li>
+</ol>
+<p>最后还要注意一点，这些内存读写操作都还是蛮贵的，比如一个<code>_mm256_loadu_ps</code>在Icelake架构里延迟都要去到8——所以尽量还是减少内存的读写，更多地使用SIMD给的类型。</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="算法"><a class="header" href="#算法">算法</a></h1>
+<p>介绍完一些比较基础的操作之后，这里给几个简单的可以用SIMD来表达的算法。</p>
+<p>详细代码可以在<a href="https://github.com/TOETOE55/simd_demo">这里</a>找到。</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="矩阵乘法"><a class="header" href="#矩阵乘法">矩阵乘法</a></h1>
+<p>矩阵运算是SIMD最容易想到的应用，这里实现一下2x2和4x4的矩阵乘法，小试牛刀。</p>
+<h2 id="2x2矩阵"><a class="header" href="#2x2矩阵">2x2矩阵</a></h2>
+<p>在这里2x2矩阵用4个双精度浮点数来表示，可以直接用<code>__m256d</code>来表示——低位两个分量为第一行，高位两个分量是第二行。</p>
+<p><img src="images/mat2x2latex1.png" alt="mat2x2latex1" /></p>
+<p>就相当于：</p>
+<pre><code class="language-text">┌───────────────┬───────────────┬───────────────┬───────────────┐ 
+│       d       │       c       │       b       │       a       │
+└───────────────┴───────────────┴───────────────┴───────────────┘ 
+                                *
+┌───────────────┬───────────────┬───────────────┬───────────────┐ 
+│       t       │       z       │       y       │       x       │
+└───────────────┴───────────────┴───────────────┴───────────────┘ 
+                                =
+┌───────────────┬───────────────┬───────────────┬───────────────┐ 
+│    c*x+d*t    │    c*x+d*z    │    a*y+b*t    │    a*x+b*z    │
+└───────────────┴───────────────┴───────────────┴───────────────┘                              
+</code></pre>
+<p>其实我没找到最优的用SIMD实现2x2矩阵的方法，不过我觉得我自己实现的方法还是挺直观的。</p>
+<ol>
+<li>从<code>[[a, b], [c, d]]</code> 得到 <code>[[a, a], [c, c]]</code> 和 <code>[[b, b], [d, d]]</code>（把列各复制一份）</li>
+<li>从<code>[[x, y], [z, t]]</code>得到<code>[[x, y], [x, y]]</code>和<code>[[z, t], [z, t]]</code>（把行各复制一份）</li>
+<li>把<code>[[a, a], [c, c]]</code> 与<code>[[x, y], [x, y]]</code>对应分量相乘得到<code>[[a*x, a*y], [c*x, c*y]]</code></li>
+<li>把<code>[[b, b], [d, d]]</code> 与<code>[[z, t], [z, t]]</code>对应分量相乘得到<code>[[b*z, b*t], [d*z, d*t]]</code></li>
+<li>然后把3和4的结果加起来。</li>
+</ol>
+<p>其实这就是矩阵分块再相乘：</p>
+<p><img src="images/mat2x2latex2.png" alt="mat2x2latex2" /></p>
+<p>代码写起来就是：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[derive(Clone, Copy)]
+#[repr(transparent)]
+pub struct Matrix2x2(__m256d);
+
+impl Mul for Matrix2x2 {
+    type Output = Self;
+
+    #[inline(always)]
+    fn mul(self, rhs: Self) -&gt; Self::Output {
+        unsafe {
+            // [[a, b], [c, d]] -&gt; [[a, a], [c, c]]
+            let a_row1_dup = _mm256_permute4x64_pd::&lt;0xA0&gt;(self.0);
+            // [[a, b], [c, d]] -&gt; [[b, b], [d, d]]
+            let a_row2_dup = _mm256_permute4x64_pd::&lt;0xF5&gt;(self.0);
+
+            // [[x, y], [z, t]] -&gt; [[x, y], [x, y]]
+            let b_col1_dup = _mm256_permute4x64_pd::&lt;0x44&gt;(rhs.0);
+            // [[x, y], [z, t]] -&gt; [[z, t], [z, t]]
+            let b_col2_dup = _mm256_permute4x64_pd::&lt;0xEE&gt;(rhs.0);
+
+            let mut res = _mm256_mul_pd(a_row2_dup, b_col2_dup);
+			
+            // 这里用fmadd把3/5步骤合并
+            res = _mm256_fmadd_pd(a_row1_dup, b_col1_dup, res);
+
+            Self(res)
+        }
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>做了个bench，处理器是11th Gen Intel(R) Core(TM) i7-1185G7 @ 3.00GHz</p>
+<ol>
+<li>
+<p>500~4900次矩阵乘法（忘记是左闭右开区间，就没做5000次乘法的测试），SIMD与普通的乘法比较（平均时间）</p>
+<p><img src="images/mat2x2lines.svg" alt="500~5000次矩阵乘法" /></p>
+</li>
+<li>
+<p>4900次矩阵乘法多次采样，SIMD的矩阵乘法平均时间为<strong>5.1721µs</strong>，普通矩阵乘法平均为<strong>13.463 µs</strong> </p>
+<p><img src="images/avx2x2.svg" alt="avx2x2" /></p>
+<p><img src="images/normal2x2.svg" alt="normal2x2" /></p>
+</li>
+</ol>
+<h2 id="4x4矩阵"><a class="header" href="#4x4矩阵">4x4矩阵</a></h2>
+<p>我们用<code>__m256d</code>表示4x4矩阵的一行，用<code>[__m256d; 4]</code>表示一个4x4矩阵。同样用分块矩阵的方式看一下4x4矩阵的乘法，关注第一行是怎么得出来的：</p>
+<p><img src="images/mat4x4latex.png" alt="mat4x4latex" /></p>
+<p>这一行换成代码来表达就是：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// c0 = [a00, a00, a00, a00] * [b00, b01, b02, b03]
+let mut c0 = _mm256_mul_pd(_mm256_broadcast_sd(&amp;a[0][0]), b[0]);
+//    + [a01, a01, a01, a01] * [b10, b11, b12, b13]
+c0 = _mm256_fmadd_pd(_mm256_broadcast_sd(&amp;a[0][1]), b[1], c0);
+//    + [a02, a02, a02, a02] * [b20, b21, b22, b23]
+c0 = _mm256_fmadd_pd(_mm256_broadcast_sd(&amp;a[0][2]), b[2], c0);
+//    + [a03, a03, a03, a03] * [b30, b31, b32, b33]
+c0 = _mm256_fmadd_pd(_mm256_broadcast_sd(&amp;a[0][3]), b[3], c0);
+<span class="boring">}</span></code></pre></pre>
+<p>然后其他几行照着写就OK。不过我也还是不太清楚SIMD写4x4矩阵最佳写法是啥。</p>
+<p>同样做一下bench，处理器是11th Gen Intel(R) Core(TM) i7-1185G7 @ 3.00GHz</p>
+<ol>
+<li>
+<p>500~4900次矩阵乘法，SIMD与普通的乘法比较（平均时间）——可以看到其实4x4矩阵其实没有2x2矩阵加速效果明显的</p>
+<p><img src="images/mat4x4lines.svg" alt="lines" /></p>
+</li>
+<li>
+<p>4900次矩阵乘法多次采样，SIMD的矩阵乘法平均时间为<strong>19.751 µs</strong>，普通矩阵乘法平均为<strong>39.845 µs</strong> </p>
+<p><img src="images/avx4x4.svg" alt="avx4x4" /></p>
+<p><img src="images/normal4x4.svg" alt="normal4x4" /></p>
+</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="parse-number"><a class="header" href="#parse-number">parse number</a></h1>
+<p>第二个SIMD的发力点是decode/encode相关，比如base64/utf8，这方面有很多库。不过我觉得这里面最有意思的是simdjson，于是这里介绍一下，simdjson中的number parsing的部分，整数的parsing（simdjson的作者又在他的<a href="https://lemire.me/blog/2022/05/25/parsing-json-faster-with-intel-AVX-512/">博客</a>里用AVX512优化了这部分工作）：</p>
+<p>算法分成几部分：</p>
+<ol>
+<li>将字符串按字节读入到向量中，大于20bytes直接返回失败（<code>u64::MAX == 1844_67440737_09551615</code> 用字符串表示为20个字节）</li>
+<li>将向量中对应数字的有效位的分量减去<code>'0'</code></li>
+<li>将向量中有效位的分量与9比较，如果存在&gt;9的返回失败（说明字符串中存在非数字）</li>
+<li>通过向量计算尽可能累加结果，比如说<code>[1, 2, 3, 4, 5, 6, 7, 8, 9]</code>
+<ol>
+<li>每两个分量计算<code>a + 10*b</code>，得到<code>[1, 23, 45, 67, 89]</code></li>
+<li>每两个分量计算<code>a + 100*b</code>，得到<code>[1, 2345, 6789]</code></li>
+<li>每两个分量计算<code>a + 10000*b</code>，得到<code>[1, 23456789]</code></li>
+</ol>
+</li>
+<li>通过标量计算累加剩余结果，比如上面的<code>1*1_0000_0000 + 23456789</code></li>
+</ol>
+<p>前三步可以使用AVX512指令来优化：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let bytes = s.as_bytes();
+
+// 超过20字节的字符串超过u64的范围
+if bytes.len() &gt; 20 {
+    return None;
+}
+
+let start = bytes.as_ptr();
+let end = unsafe { start.offset(bytes.len() as isize) };
+let mask = 0xFFFFFFFF_u32 &lt;&lt; (32 - s.len());
+
+let base10_8bit = unsafe {
+    let ascii_zero = _mm256_set1_epi8('0' as i8);
+    let nine = _mm256_set1_epi8(9);
+
+    // 1. 将字符串读入到向量的高位中，向量低位置为0
+    //    *注意*：
+    //    - `__m256i` 可以表示32个 `u8`
+    //    - 字符串的高低位与数字的高低位是相反的
+    let s_bytes_v = _mm256_maskz_loadu_epi8(mask, end.offset(-32).cast());
+
+    // 2. 将向量读到的字符串部分，每个字节 - '0'
+    let base10_8bit = _mm256_maskz_sub_epi8(mask, s_bytes_v, ascii_zero);
+
+    // 3. 如果存在字节 &gt; 9的，说明存在非数字的字节
+    //    *注意*: 这里按u8解释i8，所以如果是负数，也会 &gt; 9
+    let nondigits = _mm256_mask_cmpgt_epu8_mask(mask, base10_8bit, nine);
+    if nondigits == 0 {
+        return None;
+    }
+
+    base10_8bit
+};
+<span class="boring">}</span></code></pre></pre>
+<p>然后使用向量运算进行累加，这里要用到<code>madd</code>类操作——纵向乘横向加（不过支持的位数不多）：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// 使用向量计算10进制求和
+// 最后得到8位(digits)整数向量(4x32bits)
+//
+let base10e8_32bit = unsafe {
+    let digit_value_base10_8bit = _mm256_set_epi8(
+        1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1,
+        10, 1, 10, 1, 10, 1, 10,
+    );
+    let digit_value_base10e2_8bit = _mm_set_epi8(
+        1, 100, 1, 100, 1, 100, 1, 100, 1, 100, 1, 100, 1, 100, 1, 100,
+    );
+    let digit_value_base10e4_16bit = _mm_set_epi16(1, 10000, 1, 10000, 1, 10000, 1, 10000);
+
+    // example:
+    // s = &quot;1234&quot;
+    // base10_8bit             = [0.., 1, 2, 3, 4]
+    // digit_value_base10_8bit = [.., 10, 1, 10, 1]
+    // maddubs_epi16           = [0.., 1*10 + 2*1, 3*10 + 4*1]
+    //                         = [0.., 12, 34]
+    let base10e2_16bit = _mm256_maddubs_epi16(base10_8bit, digit_value_base10_8bit);
+    let base10e2_8bit = _mm256_cvtepi16_epi8(base10e2_16bit);
+
+    // = [0.., 1234]
+    let base10e4_16bit = _mm_maddubs_epi16(base10e2_8bit, digit_value_base10e2_8bit);
+
+    let base10e8_32bit = _mm_madd_epi16(base10e4_16bit, digit_value_base10e4_16bit);
+    base10e8_32bit
+};
+<span class="boring">}</span></code></pre></pre>
+<p>最后剩余的累加通过标量加法完成：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// 使用标量计算剩余数的十进制求和
+unsafe {
+    let res_1digit = _mm_extract_epi32(base10e8_32bit, 3) as u64;
+    if mask &amp; 0xFFFFFFFF == 0 {
+        return Some(res_1digit);
+    }
+
+    let middle_part = _mm_extract_epi32(base10e8_32bit, 2) as u64;
+    let res_2digit = res_1digit + 1_0000_0000 * middle_part;
+    if mask &amp; 0xFFFF == 0 {
+        return Some(res_2digit);
+    }
+
+    let high_part = _mm_extract_epi32(base10e8_32bit, 1) as u64;
+    if high_part &gt; 1844 || res_2digit &gt; 67440737_09551615 {
+        return None;
+    } else {
+        return Some(res_2digit + 1_0000_0000_0000_0000 * high_part);
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<h2 id="bench"><a class="header" href="#bench">bench</a></h2>
+<p>处理器是11th Gen Intel(R) Core(TM) i7-1185G7 @ 3.00GHz。处理1000000个随机u64的parse，速度比标准库提升了两倍多。</p>
+<div class="table-wrapper"><table><thead><tr><th></th><th>平均耗时</th><th>处理速度</th></tr></thead><tbody>
+<tr><td>simd</td><td>10.900 ms</td><td>1.657 GB/s</td></tr>
+<tr><td>normal</td><td>30.463 ms</td><td>0.593 GB/s</td></tr>
+<tr><td>std</td><td>23.778 ms</td><td>0.760 GB/s</td></tr>
+</tbody></table>
+</div>
+<p>simdjson其实我还没仔细看，这里就不展开了，大家可以直接去看simdjson的<a href="https://github.com/simdjson/simdjson">仓库</a>，算法相关的资料也都非常齐全。</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="快排"><a class="header" href="#快排">快排</a></h1>
+<p>SIMD还有一个让我觉得意想不到的能力是，可以用来做排序。<a href="https://arxiv.org/pdf/1704.08579">这篇论文</a>提出了一种基于AVX512指令的快排优化算法。</p>
+<p>该论文提出快排有两个开销最大的部分：</p>
+<ol>
+<li>partition部分，也就是把比基准小的放基准左边，把基准大的放基准右边——这是快排N*lg(N)前面那个一次的N的来源。</li>
+<li>短数组排序——当快排划分到小的区间进行排序的时候。</li>
+</ol>
+<h2 id="partition"><a class="header" href="#partition">partition</a></h2>
+<p>论文提出了新的partition算法，它利用了SIMD批量读出写入、批量比较的能力，尤其是AVX512中的<code>cmp_mask</code>和<code>compressstore</code>运算。这里就详细介绍一下这个算法。</p>
+<ol>
+<li>
+<p>首先是，<code>simd_partition</code>接口，选取<code>arr</code>最后一个元素为基准，函数将<code>arr</code>中小于等于基准的元素放在左边，大于基准的元素放在右边，而函数的返回值是右边的第一个元素的下标（也就是第一个比基准大的元素）。要求数组的长度大于等于两倍的向量长度。</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn simd_partition(arr: &amp;mut [i32]) -&gt; usize;
+<span class="boring">}</span></code></pre></pre>
+</li>
+<li>
+<p>这个算法主要维护几个下标：</p>
+<ul>
+<li><code>left</code>：从0开始，递增步长一般为向量的长度，直到<code>left == right</code>，用于批量读入数组的值。</li>
+<li><code>right</code>：从len - 1开始，递减步长一般为向量的长度，直到<code>left == right</code>，用于批量读入数组的值。</li>
+<li><code>left_w</code>：从0开始递增，直到<code>left_w == right_w</code>，用于写入从<code>left</code>或者<code>right</code>中读到小于等于基准的值，每次递增保证<code>left_w</code>左边的值小于等于基准。</li>
+<li><code>right_w</code>：从len - 1开始递减，直到<code>left_w == right_w</code>，用于写入从<code>left</code>或者<code>right</code>中读到大于基准的值，每次递增保证<code>right_w</code>右边的值大于基准。</li>
+</ul>
+</li>
+</ol>
+<p>算法的详细代码</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>/// 向量长度，这里为 16
+const S: usize = size_of::&lt;__m512i&gt;() / size_of::&lt;i32&gt;();
+
+/// Safety
+/// - arr.len() &gt; 2*S
+unsafe fn simd_partition(arr: &amp;mut [i32]) -&gt; usize {
+    let mut left = 0;
+    let mut right = arr.len() - 1;
+    unsafe {
+        // 基准向量
+        let pivotvec = _mm512_set1_epi32(arr[right]);
+
+        // 1. 读出第一个向量和最后一个向量的值，并推进`left`和`right`。这两个向量做特殊处理。
+        let left_val = _mm512_loadu_epi32(arr.as_ptr().offset(left as isize));
+        let mut left_w = left;
+        left += S;
+
+        let mut right_w = right;
+        right -= S;
+        let right_val = _mm512_loadu_epi32(arr.as_ptr().offset(right as isize));
+
+        // 2. 让`left`和`right`尽可能以一个向量长度的步长向中间推进。
+        while left + S &lt;= right {
+            let val;
+            // 从`left`或`right`中读出一个向量，并推进
+            if left - left_w &lt;= right_w - right {
+                val = _mm512_loadu_epi32(arr.as_ptr().offset(left as isize));
+                left += S;
+            } else {
+                right -= S;
+                val = _mm512_loadu_epi32(arr.as_ptr().offset(right as isize));
+            }
+
+            // 将读出的值批量与基准比较
+            let mask = _mm512_cmp_epi32_mask::&lt;_MM_CMPINT_LE&gt;(val, pivotvec);
+
+            // 小于等于基准值的个数
+            let nb_low = mask.count_ones() as usize;
+            // 大于等于基准值的个数
+            let nb_high = S - nb_low;
+
+            // 将小于等于基准的部分写到`left_w`中，并推进`left_w`
+            _mm512_mask_compressstoreu_epi32(
+                arr.as_mut_ptr().offset(left_w as isize) as *mut i32 as _,
+                mask,
+                val,
+            );
+            left_w += nb_low;
+
+            // 将大于基准的部分写到`right_w`中，并推进`right_w`
+            right_w -= nb_high;
+            _mm512_mask_compressstoreu_epi32(
+                arr.as_mut_ptr().offset(right_w as isize) as *mut i32 as _,
+                !mask,
+                val,
+            );
+        }
+
+        // 3. 处理当`left`与`right`之间不足一个向量长度的情况
+        {
+            let remaining = right - left;
+            let val = _mm512_loadu_epi32(arr.as_ptr().offset(left as isize));
+            // left = right;
+
+            let mask = _mm512_cmp_epi32_mask::&lt;_MM_CMPINT_LE&gt;(val, pivotvec);
+
+            // 只关心`left`和`right`之间的数据
+            let mask_low = mask &amp; !(0xFFFF &lt;&lt; remaining);
+            let mask_high = !mask &amp; !(0xFFFF &lt;&lt; remaining);
+
+            // 下面处理同上
+            let nb_low = mask_low.count_ones() as usize;
+            let nb_high = mask_high.count_ones() as usize;
+
+            _mm512_mask_compressstoreu_epi32(
+                arr.as_mut_ptr().offset(left_w as isize) as *mut i32 as _,
+                mask_low,
+                val,
+            );
+            left_w += nb_low;
+
+            right_w -= nb_high;
+            _mm512_mask_compressstoreu_epi32(
+                arr.as_mut_ptr().offset(right_w as isize) as *mut i32 as _,
+                mask_high,
+                val,
+            );
+        }
+        
+        // 4. 再处理一开始没有用于比较的一个向量和最后一个向量（处理方法一致）
+        {
+            let mask = _mm512_cmp_epi32_mask::&lt;_MM_CMPINT_LE&gt;(left_val, pivotvec);
+
+            let nb_low = mask.count_ones() as usize;
+            let nb_high = S - nb_low;
+
+            _mm512_mask_compressstoreu_epi32(
+                arr.as_mut_ptr().offset(left_w as isize) as *mut i32 as _,
+                mask,
+                left_val,
+            );
+            left_w += nb_low;
+
+            right_w -= nb_high;
+            _mm512_mask_compressstoreu_epi32(
+                arr.as_mut_ptr().offset(right_w as isize) as *mut i32 as _,
+                !mask,
+                left_val,
+            );
+        }
+        {
+            let mask = _mm512_cmp_epi32_mask::&lt;_MM_CMPINT_LE&gt;(right_val, pivotvec);
+
+            let nb_low = mask.count_ones() as usize;
+            let nb_high = S - nb_low;
+
+            _mm512_mask_compressstoreu_epi32(
+                arr.as_mut_ptr().offset(left_w as isize) as *mut i32 as _,
+                mask,
+                right_val,
+            );
+            left_w += nb_low;
+
+            right_w -= nb_high;
+            _mm512_mask_compressstoreu_epi32(
+                arr.as_mut_ptr().offset(right_w as isize) as *mut i32 as _,
+                !mask,
+                right_val,
+            );
+        }
+        
+        // assert_eq!(left_w, right_w);
+        arr.swap(left_w, arr.len() - 1);
+        left_w
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>这里用一个实际的例子做一下演示，给定数据为<code>arr = [10, 1, 8, 3, 6, 5, 4, 7, 2, 9]</code>，向量长度为2。</p>
+<pre><code class="language-text">----------------------- init --------------------------
+arr = [10, 1, 8, 3, 6, 5, 4, 7, 2, 9] pivot = 9
+left = 0         | right = 9
+left_w = 0       | right_w = 9
+
+----------------------- step1 --------------------------
+arr = [10, 1, 8, 3, 6, 5, 4, 7, 2, 9] pivot = 9
+left = 2         | right = 7
+left_w = 0       | right_w = 9
+left_v = [10, 1] | right_v = [7, 2] // 这里其实漏了最后一个9
+
+----------------------- step2 --------------------------
+val = [8, 3] // 从`left`读向量。都比 pivot小
+
+arr = [[8, 3], 8, 3, 6, 5, 4, 7, 2, 9] pivot = 9 // 将`val`写入`left_w`
+        ^  ^
+
+left = 4         | right = 7
+left_w = 2       | right_w = 9 // 推进`left_w`
+
+----------------------- step2 --------------------------
+val = [6, 5] // 从`left`读向量。都比 pivot小
+
+arr = [8, 3, [6, 5], 6, 5, 4, 7, 2, 9] pivot = 9 // 将`val`写入`left_w`
+              ^  ^
+
+left = 6         | right = 7
+left_w = 4       | right_w = 9 // 推进`left_w`
+
+----------------------- step3 --------------------------
+val = [4] // 读`left`和`right`之间的值，比pivot小
+
+arr = [8, 3, 6, 5, [4], 5, 4, 7, 2, 9] pivot = 9 // 将`val`写入`left_w`
+                    ^
+                    
+left = 7         | right = 7
+left_w = 5       | right_w = 9 // 推进`left_w`
+
+
+----------------------- step4 --------------------------
+left_val = [10, 1] // 处理`left_val`，10比`pivot`大，1比`pivot`小
+
+arr = [8, 3, 6, 5, 4, [1, 4], 7, [10, 9]] pivot = 9 // 将[1]写入`left_w`，将[10]写入`right_w - 1`
+                       ^           ^
+                       
+left_w = 6       | right_w = 8 // 推进`left_w`/`right_w`
+
+----------------------- step4 --------------------------
+left_val = [7, 2] // 处理`right_val`都比pivot小
+
+arr = [8, 3, 6, 5, 4, 1, [7, 2], 10, 9] pivot = 9 // 将[7, 2]写入`left_w`
+                          ^  ^
+left_w = 8       | right_w = 8 // 推进`left_w`
+
+----------------------- step5 --------------------------
+// 交换`arr[left_w]`和pivot的位置
+
+arr = [8, 3, 6, 5, 4, 1, 7, 2, 9, 10]
+                               ^ left_w = 8
+
+</code></pre>
+<p>最后结果为<code>arr = [8, 3, 6, 5, 4, 1, 7, 2, 9, 10]</code>，返回8。</p>
+<h2 id="短数组排序双调排序bitonic-sort"><a class="header" href="#短数组排序双调排序bitonic-sort">短数组排序——双调排序(bitonic sort)</a></h2>
+<p><a href="https://en.wikipedia.org/wiki/Bitonic_sorter">双调排序</a>是一种并行排序的算法，在并行的情况下时间复杂度仅为 \(O\left(\log^2\left(n\right)\right) \)。比如说8个元素的双调排序的操作可以用一个图来描述：</p>
+<p><img src="images/bitonic8.png" alt="bitonic" /></p>
+<p>这个图从左边输入8个数，遇到连接线的时候将对应的数字进行比较/交换的操作，到右边输出的就是从上到下排好序的数字了。这里从左到右：</p>
+<ol>
+<li><code>(arr[0], arr[1])</code>，<code>(arr[2], arr[3])</code>，<code>(arr[4], arr[5])</code>，<code>(arr[6], arr[7])</code>进行比较交换操作</li>
+<li><code>(arr[0], arr[3])</code>，<code>(arr1, arr[2])</code>，<code>(arr[3], arr[7])</code>，<code>(arr[5], arr[6])</code>进行比较和交换操作</li>
+<li><code>(arr[0], arr[1])</code>，<code>(arr[2], arr[3])</code>，<code>(arr[4], arr[5])</code>，<code>(arr[6], arr[7])</code>进行比较交换操作</li>
+<li><code>(arr[0], arr[7])</code>，<code>(arr[1], arr[6])</code>，<code>(arr[2], arr[5])</code>，<code>(arr[3], arr[4])</code>进行比较和交换操作</li>
+<li><code>(arr[0], arr[2])</code>，<code>(arr[1], arr[3])</code>，<code>(arr[4], arr[6])</code>，<code>(arr[5], arr[7])</code>进行比较和交换操作</li>
+<li><code>(arr[0], arr[1])</code>，<code>(arr[2], arr[3])</code>，<code>(arr[4], arr[5])</code>，<code>(arr[6], arr[7])</code>进行比较交换操作</li>
+</ol>
+<p>这里每一步的比较和交换操作可以用向量操作来完成，比如第一步可以写为：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn bitonic_sort_1v(v: __m256i) -&gt; __m256i {
+    {
+        // 0,1; 2,3; 4,5; 6,7交换
+        let idxs = _m256_set_epi32(6, 7, 4, 5, 2, 3, 0, 1);
+        let perm = _m256_permutexvar_epi32(idx, v);
+        // compare
+        let mins = _m256_min_epi32(v, perm);
+        let maxs = _m256_max_epi32(perm, v);
+        // exchange
+        // 0,2,4,6位取mins, 1,3,5,7位取maxs
+        v = _mm256_mask_mov_epi32(mins, 0b10101010, maxs);
+        
+        // example:
+        // v:    [1, 4, 3, 2]
+        // perm: [4, 1, 2, 3]
+        // mins: [1, 1, 2, 2]
+        // maxs: [4, 4, 3, 3]
+        // res:  [1, 4, 2, 3]
+    }
+    
+    // 剩下的类似...
+}
+
+ 
+<span class="boring">}</span></code></pre></pre>
+<p>目前我的实现中，对于小于等于两个向量长度的数组使用双调排序（刚好覆盖了<code>simd_partition</code>没处理的情况），而对于不满一个或者两个向量长度的数组，会填充<code>i32::MAX</code>。（论文作者的实现则是16个向量长度以下的数组用双调排序）</p>
+<h2 id="bench-1"><a class="header" href="#bench-1">bench</a></h2>
+<p>处理器是11th Gen Intel(R) Core(TM) i7-1185G7 @ 3.00GHz。做了10, 100, 1000, 10000, 100000, 1000000个随机i32排序的bench。</p>
+<p>SIMD加速的快排在现有的测试下规模越大的数组里优势越明显，比标准库提供的快排有3~4倍的提升</p>
+<div class="table-wrapper"><table><thead><tr><th></th><th>simd</th><th>normal</th><th>std</th></tr></thead><tbody>
+<tr><td>10</td><td>30.004 ns</td><td>71.013 ns</td><td>38.443 ns</td></tr>
+<tr><td>100</td><td>322.27 ns</td><td>894.56 ns</td><td>666.08 ns</td></tr>
+<tr><td>1000</td><td>3.1232 µs</td><td>24.163 µs</td><td>9.1394 µs</td></tr>
+<tr><td>10000</td><td>37.535 µs</td><td>537.69 µs</td><td>177.11 µs</td></tr>
+<tr><td>100000</td><td>572.28 µs</td><td>6.4045 ms</td><td>2.1345 ms</td></tr>
+<tr><td>1000000</td><td>7.1806 ms</td><td>76.253 ms</td><td>29.755 ms</td></tr>
+</tbody></table>
+</div>
+<p><img src="images/qsort_lines.svg" alt="lines" /></p>
+<p>不过这篇论文是基于AVX512指令设计的快排算法，通用性很一般。不过Google提出了一个<a href="https://opensource.googleblog.com/2022/06/Vectorized%20and%20performance%20portable%20Quicksort.html">新的算法</a>，跨平台，使用不同平台中提供的SIMD指令进行排序，同时也保证了效率。。（不过我没看懂）</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="未来畅想"><a class="header" href="#未来畅想">未来畅想</a></h1>
+<p>不过目前SIMD还是很难实现工程化，</p>
+<ol>
+<li>很难做到跨端——不同平台提供的SIMD指令都不同，差异很难抹平；甚至同平台中不同SIMD指令集之间差异都很大，本身就很难用一套通用的接口来描述。如果强行封装，要么就会丢掉一些功能，要么就缺少效率。这里就是一些trade off。</li>
+<li>很少语言有向量计算/并行计算的first-class支持，首先这便阻碍了设计向量计算、并行计算的抽象；另外缺乏相关语义，编译器读不懂便很难做优化，利用机器本身自带的一些向量计算、并行计算的能力。</li>
+<li>能利用向量化加速的算法还不多。</li>
+</ol>
+<p>但我觉得事情在慢慢发生变化，硬件方面，由于AI的兴起，人们对算力的要求又上一个台阶，异构计算似乎慢慢走向主流；软件方面，现在一些新的语言也正开始把向量计算，并行计算考虑到语言设计中，比如说bend/mojo/zig等等。</p>
+<p>于是最近便产生了这样一个想法：如果说这这代编程语言是由haskell, typescript, rust等语言带来的类型系统的革命——强大的类型系统能让我们描述管理各种抽象，且能保证类型安全。</p>
+<p>那么，下一代编程语言我觉得应该是性能的革命。目前我认为不存在足够通用且好用的语言让我们轻松地在业务上利用起越来越多异构计算（gpu，tpu，fpga等）带来的优势。新一代的语言我觉得应该：</p>
+<ol>
+<li>除了能对标量计算进行编程外，同时还能方便地对向量、矩阵、张量进行编程，甚至还能对模拟计算进行编程（？</li>
+<li>能进行更精细的并发控制，能更好利用起并行计算的能力。</li>
+<li>既机器友好，也程序员友好。能写高等抽象，并能编译到各种异构的机器上。</li>
+</ol>
+<p>不过说到底，还是编译器的革命，PL的革命，未来的编译器能把人和机器无缝连接起来。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+        <script>
+        window.addEventListener('load', function() {
+            MathJax.Hub.Register.StartupHook('End', function() {
+                window.setTimeout(window.print, 100);
+            });
+        });
+        </script>
+
+    </div>
+    </body>
+</html>

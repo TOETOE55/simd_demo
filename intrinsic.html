@@ -1,0 +1,441 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>SIMD intrinsic - 近来学点SIMD如何？</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="foreword.html"><strong aria-hidden="true">1.</strong> 近来学点SIMD如何？</a></li><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">2.</strong> SIMD简单介绍</a></li><li class="chapter-item expanded "><a href="x86simd.html"><strong aria-hidden="true">3.</strong> x86 SIMD基础</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="instruction.html"><strong aria-hidden="true">3.1.</strong> 指令集</a></li><li class="chapter-item expanded "><a href="intrinsic.html" class="active"><strong aria-hidden="true">3.2.</strong> SIMD intrinsic</a></li></ol></li><li class="chapter-item expanded "><a href="algorithm.html"><strong aria-hidden="true">4.</strong> 算法</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="matmul.html"><strong aria-hidden="true">4.1.</strong> 矩阵乘法</a></li><li class="chapter-item expanded "><a href="parse_num.html"><strong aria-hidden="true">4.2.</strong> parse number</a></li><li class="chapter-item expanded "><a href="qsort.html"><strong aria-hidden="true">4.3.</strong> 快排</a></li></ol></li><li class="chapter-item expanded "><a href="conclusion.html"><strong aria-hidden="true">5.</strong> 未来畅想</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">近来学点SIMD如何？</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="simd-intrinsic"><a class="header" href="#simd-intrinsic">SIMD intrinsic</a></h1>
+<p>我们当然可以直接手写SIMD的汇编指令，但没必要。编译器提供了一些几乎能直接映射到汇编的intrinsic函数，抽象层次稍微高一点，比如我们不用关心寄存器如何分配。</p>
+<p>我们在C里只要<code>#include&lt;immintrin.h&gt;</code>就可以使用所有的SIMD intrinsic函数了。在rust中，x86的intrinsic函数则放在<code>core::arch::x86_64</code>中（都假定是64位系统了）。</p>
+<h2 id="数据类型"><a class="header" href="#数据类型">数据类型</a></h2>
+<p>目前x86(x86-64)下的SIMD数据类型有以下这些，都对应着对应位数的寄存器：</p>
+<ul>
+<li><code>__m64</code>: 表示1个64位整数，2个32位整数，4个16位整数或8个8位整数</li>
+<li><code>__m128</code>: 表示4个单精度浮点数</li>
+<li><code>__m128d</code>: 表示2个双精度浮点数（d是double，双精度的意思）</li>
+<li><code>__m128i</code>：2个64位整数，4个32位整数，8个16位整数，16个8位整数。（i是integer，整数的意思）</li>
+<li><code>__m256</code>: 表示8个单精度浮点数</li>
+<li><code>__m256d</code>: 表示4个双精度浮点数</li>
+<li><code>__m256i</code>: 4个64位整数blahblah...</li>
+<li><code>__m512</code>, <code>__m512d</code>, <code>__m512i</code>: 同理</li>
+<li><code>__m128bh</code>, <code>__m256bh</code>, <code>__m512bh</code>: 半精度浮点数的SIMD类型（bh是brain floating point）</li>
+</ul>
+<p>比如说<code>__m256</code>的内存布局和<code>float[8]</code>或者说<code>[f32;8]</code>是一致的（只是对齐不一样），长这样，其中每个格子是为32位，为单精度浮点数：</p>
+<pre><code class="language-text"> ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │  a7   │  a6   │  a5   │  a4   │  a3   │  a2   │  a1   │  a0   │ 
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+     7       6       5       4       3       2       1       0   
+</code></pre>
+<p>为了方便与整数的高低位对应，这里也把低位放在右边。（一般书写顺序整数的位数由低到高也是从右到左，有点rtl文字的意味了）</p>
+<p>注意，<code>__m128</code>的对齐为16个字节，<code>__m256</code>对齐为32个字节，<code>__m512</code>对齐为64个字节，而<code>malloc</code>函数分配的内存则按<code>size_t</code>的对齐（一般为8字节），所以如果要分配这些类型的内存则需要<code>aligned_alloc</code>函数。</p>
+<h2 id="函数"><a class="header" href="#函数">函数</a></h2>
+<p>所有的intrinsic函数可以在 <a href="https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html">Intel Intrinsics Guide</a>查到，不过你会看到一大堆长这样的函数<code>_mm256_add_epi32</code>, <code>_mm256_cvtepi32_ps</code>，第一眼会很懵逼。但这里的大多数函数都遵循一个命名规则：<code>_mm&lt;bit_width&gt;_&lt;op_name&gt;_&lt;data_ty&gt;</code></p>
+<ol>
+<li>bit_width：表示这个函数作用在多少位的向量上，比如<code>_mm256</code>则表示作用于256位的向量上。如果没标则默认是128位的。</li>
+<li>op_name：则是操作的名字，比如说<code>add</code>是加，<code>cvt</code>是转换，<code>load</code>是从内存加载等等。</li>
+<li>data_ty：表示向量中的数据类型是什么，比如<code>pd</code>是双精度浮点，<code>ps</code>是单精度浮点，<code>epi32</code>是32位有符号整数，<code>epu64</code>是64位有符号整数等等。</li>
+</ol>
+<p>这些intrinsic函数又可以分为几类：算术类，逻辑类，分量操作类，比较类，转换类，内存读写类，掩码类（AVX512专属）。我们来展开一下。</p>
+<h2 id="算术类逻辑类"><a class="header" href="#算术类逻辑类">算术类/逻辑类</a></h2>
+<p>算术类和逻辑类属于是最简单典型的操作了，大部分都很好理解，比如<code>_mm256_mul_ps</code>就是<code>__m256</code>中8个单精度浮点数同时相乘：</p>
+<pre><code class="language-text"> ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │  a7   │  a6   │  a5   │  a4   │  a3   │  a2   │  a1   │  a0   │   a
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                                 *
+ ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │  b7   │  b6   │  b5   │  b4   │  b3   │  b2   │  b1   │  b0   │   b
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                                 =
+ ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │ a7*b7 │ a6*b6 │ a5*b5 │ a4*b4 │ a3*b3 │ a2*b2 │ a1*b1 │ a0*b0 │  _mm256_mul_ps(a, b)
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+</code></pre>
+<p>而<code>_mm256_and_ps</code>顾名思义，就是<code>_mm256_mul_ps</code>中8个单精度浮点数同时逻辑与了。不过我们可以关注一下这些指令的延迟和吞吐，比如说<code>_mm256_mul_ps</code>在Intel Intrinsics guide中上说在Icelake架构中，延迟是4（4个周期完成），吞吐量（IPC）为2（一个周期内可以处理两条指令）。不过。</p>
+<p>这里额外介绍一个也很常用的运算，融合乘加，一个指令同时完成乘法和加法。比如<code>_mm256_fmadd_ps</code>接受三个<code>__m256</code>向量<code>a</code>, <code>b</code>, <code>c</code>，每个分量上同时进行<code>a[i] * b[i] + c[i]</code>运算：</p>
+<pre><code class="language-text"> ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │  a7   │  a6   │  a5   │  a4   │  a3   │  a2   │  a1   │  a0   │   a
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                                 *
+ ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │  b7   │  b6   │  b5   │  b4   │  b3   │  b2   │  b1   │  b0   │   b
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                                 +
+ ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │  c7   │  c6   │  c5   │  c4   │  c3   │  c2   │  c1   │  c0   │   c
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                                 =
+ ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │ a7*b7 │ a6*b6 │ a5*b5 │ a4*b4 │ a3*b3 │ a2*b2 │ a1*b1 │ a0*b0 │  _mm256_fmadd_ps(a, b, c)
+ │  +c7  │  +c6  │  +c5  │  +c4  │  +c3  │  +c2  │  +c1  │  +c0  │
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+</code></pre>
+<p>但其实这和<code>_mm256_mul_ps</code>具有同样的延迟和吞吐，而且这是一个操作，会比分别乘完再加少一次舍入误差——会更加精确。</p>
+<p>算术类除了加减乘除，其实还有一些数学函数，比如<code>sqrt</code>/三角函数啥的（竟然把这些都做进了电路里，真狠啊）。还有一些不是按对应分量的运算，比如说水平加法<code>hadd</code>，点乘<code>dp</code>等等。这里便不展开了。</p>
+<h2 id="分量操作类"><a class="header" href="#分量操作类">分量操作类</a></h2>
+<p>分量操作类，顾名思义就是用来操作向量中的分量的，比如说分量位置的移动，分量的读取修改等。这也是SIMD中十分重要的一种运算。其中最常用的操作是<code>permute</code>排列操作，排列操作也有很多种。</p>
+<p>最通用的排列是<code>permutexvar</code>(AVX512引入)操作，比如<code>_m256_permutexvar_ps</code>操作，接受一个idx向量，和一个被排列向量，每个分量进行索引操作<code>a[ix]</code>操作：</p>
+<pre><code class="language-text"> ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │  i7   │  i6   │  i5   │  i4   │  i3   │  i2   │  i1   │  i0   │   idx
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                                []
+ ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │  a7   │  a6   │  a5   │  a4   │  a3   │  a2   │  a1   │  a0   │   a
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                                 =
+ ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │ a[i7] │ a[i6] │ a[i5] │ a[i4] │ a[i3] │ a[i2] │ a[i1] │ a[i0] │  _m256_permutexvar_ps(idx, a)
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+</code></pre>
+<p>这个在Icelake架构下延迟为3，IPC为1，吞吐量要比乘法加法要低一些。</p>
+<p>除了<code>permutexvar</code>这些名字里带var的操作（即用向量本身做索引）以外，还有些不带var的<code>permute</code>操作，通过一个8位的<strong>常量</strong>来表示索引向量，比如<code>_mm_permute_ps(a, 0b11_01_01_10)</code>：</p>
+<pre><code class="language-text">┌───────┬───────┬───────┬───────┐ 
+│  a3   │  a2   │  a1   │  a0   │   a
+└───────┴───────┴───────┴───────┘ 
+   11      01      01       10
+┌───────┬───────┬───────┬───────┐ 
+│ a[3]  │ a[1]  │ a[1]  │ a[2]  │   _mm_permute_ps(a, 0b11_01_01_10)
+└───────┴───────┴───────┴───────┘
+</code></pre>
+<p>这个操作在Icelake架构中，延迟只有1，比上面的<code>permutexvar</code>快不少。但这种操作挺弱鸡，只能在128位的数据内进行排序——在AVX里有128位的通道（lane）和256位的通道，在一个通道中排列的效率会更高（再补充一点，<code>permutexvar</code>里的<code>x</code>是across，也就是跨通道的意思）。如果在超过一个128位通道的向量中进行排列，相当于分别对每个128位的部分都进行同样的操作，比如说<code>_mm256_permute_ps(a, 0b11_01_01_10)</code>：</p>
+<pre><code class="language-text">┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+│  a7   │  a6   │  a5   │  a4   │  a3   │  a2   │  a1   │  a0   │   a
+└───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                                   11      01      01       10
+┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+│  a[7] │  a[5] │  a[5] │  a[6] │ a[3]  │ a[1]  │ a[1]  │ a[2]  │   _mm256_permute_ps(a, 0b11_01_01_10)
+└───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘
+注意这里下标+4了，也就是0b100
+</code></pre>
+<p>除了<code>permute</code>以外，还有其它操作，比如<code>shuffle</code>/<code>blend</code>操作，这里就不一一展开了。</p>
+<h2 id="比较类"><a class="header" href="#比较类">比较类</a></h2>
+<p>比较的操作也是比较直观的，就是在每个分量上进行比较，如果为true分量上为全1，为false则分量为0。</p>
+<p>举个具体的例子，<code>_mm256_cmp_ps(a, b, _CMP_LE_UQ)</code>，其中第三个参数是个常量，表示比较的操作，其中<code>U</code>表示不比较<code>nan</code>（如果要比较的话用<code>O</code>），而<code>Q</code>表示quiet（如果关心signal浮点数的话则用<code>S</code>）。其它比较运算可以看intel Intrinsics guide。</p>
+<pre><code class="language-text">┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+│  1.0  │  2.0  │  3.0  │  4.0  │  5.0  │  6.0  │  7.0  │  8.0  │   a
+└───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                      _CMP_LE_UQ 也就是 &lt;=
+┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+│  4.0  │  4.0  │  4.0  │  4.0  │  4.0  │  4.0  │  4.0  │  4.0  │   b
+└───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                                =
+┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+│  0x0  │  0x0  │  0x0  │  0x0  │0xFFFF │0xFFFF │0xFFFF │0xFFFF │   _mm256_cmp_ps(a, b, _CMP_LE_UQ)
+│       │       │       │       │  FFFF │  FFFF │  FFFF │  FFFF │
+└───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+</code></pre>
+<p>比较运算看起来比较简单，但是如果结合逻辑运算的话，就可以实现类似if-else的效果。举个例子，如果我们想在分量上计算：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let d = if a &lt;= b {
+    a + b
+} else {
+    a * b
+}
+<span class="boring">}</span></code></pre></pre>
+<p>我们就可以写成这样：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// 假设结果是这个
+// ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+// │  true │  true │  true │  true │ false │ false │ false │ false │  
+// └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘  
+let cmp = _mm256_cmp_ps(a, b, _CMP_LE_UQ);
+
+// 加完后将为false的给置0
+// ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+// │ a7+b7 │ a6+b6 │ a5+b5 │ a4+b4 │   0   │   0   │   0   │   0   │  
+// └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘  
+let add = __mm256_and_ps(cmp, _mm256_add_ps(a, b));
+
+// 加完后将为true的置0
+// ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+// │   0   │   0   │   0   │   0   │ a3*b3 │ a2*b2 │ a1*b1 │ a0*b0 │  
+// └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘  
+let mul = __mm256_notand_ps(cmp, _mm256_mul_ps(a, b));
+
+// 最后将结果合并
+// ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+// │ a7+b7 │ a6+b6 │ a5+b5 │ a4+b4 │ a3*b3 │ a2*b2 │ a1*b1 │ a0*b0 │  
+// └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘  
+let res = __mm256_or_ps(add, mul);
+<span class="boring">}</span></code></pre></pre>
+<p>虽然这里会产生多余的运算，把不必要计算的分量都计算了一遍，但这里不产生实际的分支，对分支预测十分友好，最终还是快的。</p>
+<p>那有没有不进行额外计算的办法呢？有！AVX-512里就引入了这样的方式！</p>
+<h2 id="掩码类"><a class="header" href="#掩码类">掩码类</a></h2>
+<p>AVX512的新指令里引入的掩码的概念，堪称神来之笔，为向量计算的表达力提升了一个台阶。目前分别为8位、16位、32位、64位的掩码<code>__mask8</code>, <code>__mask16</code>,<code>__mask32</code>, <code>__mask64</code>。掩码的每一位都映射到向量中的一个分量，一般来说0代表对应分量不参与运算，1代表对应分量参与运算。</p>
+<p>比如说<code>_m256_mask_add_ps</code>，接受3个向量<code>src</code>, <code>a</code>, <code>b</code>，其中<code>a</code>和<code>b</code>两个向量参与运算。当掩码对应位为0时，<em>不</em>进行运算，取<code>src</code>对应位，而当掩码对应位为1时，才进行运算：（注意，这里的掩码并不是常量）</p>
+<pre><code class="language-text"> ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │  s7   │  s6   │  s5   │  s4   │  s3   │  s2   │  s1   │  s0   │   src
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+     1       1       1       1       0       0       0      0        mask = 0b11110000
+ ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │  a7   │  a6   │  a5   │  a4   │  a3   │  a2   │  a1   │  a0   │   a
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                                 +
+ ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │  b7   │  b6   │  b5   │  b4   │  b3   │  b2   │  b1   │  b0   │   b
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                                 =
+ ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+ │ a7+b7 │ a6+b6 │ a5+b5 │ a4+b4 │  s3   │  s2   │  s1   │  s0   │   _m256_mask_add_ps(src, mask, a, b)
+ └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘  
+ 
+ 如果想把不参与运算的分量置0，那还能把`mask`换成`maskz`，z就是zero的意思。
+</code></pre>
+<p>而AVX512中比较操作也返回一个掩码，而非一整个向量了，照搬之前的例子<code>_mm256_cmp_ps_mask(a, b, _CMP_LE_UQ)</code>：</p>
+<pre><code class="language-text">┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+│  1.0  │  2.0  │  3.0  │  4.0  │  5.0  │  6.0  │  7.0  │  8.0  │   a
+└───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                      _CMP_LE_UQ 也就是 &lt;=
+┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+│  4.0  │  4.0  │  4.0  │  4.0  │  4.0  │  4.0  │  4.0  │  4.0  │   b
+└───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+                                =
+    1       1       1       1       0       0       0       0       _mm256_cmp_ps_mask(a, b, _CMP_LE_UQ) = 0b11110000
+</code></pre>
+<p>得到的mask又可以放到mask运算中去。我们可以用AVX512来重新写一下刚刚模拟if-else的例子：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// 0b11110000
+let cmp_mask = _mm256_cmp_ps_mask(a, b, _CMP_LE_UQ);
+
+// 只在掩码为1的分量上计算加法
+// ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+// │ a7+b7 │ a6+b6 │ a5+b5 │ a4+b4 │  a3   │  a2   │  a1   │  a0   │  
+// └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘  
+let add = __mm256_maskz_add_ps(a, cmp_mask, a, b);
+
+// 在掩码为0的分量上计算乘法
+// ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+// │ a7+b7 │ a6+b6 │ a5+b5 │ a4+b4 │ a3*b3 │ a2*b2 │ a1*b1 │ a0*b0 │  
+// └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘  
+let res = __mm256_maskz_mul_ps(add, !cmp_mask, a, b);
+<span class="boring">}</span></code></pre></pre>
+<p>用上了mask运算之后，除了减少了三次向量逻辑运算，同时一个mask指令里面还减少不必要的运算。</p>
+<p>有了掩码操作之后，化简了特别多的操作，在这里就不一一展开了（留一个到内存读写）。<strong>所以说AVX512 YYDS!!!!在此diss一下某牙膏厂</strong></p>
+<h2 id="转换类"><a class="header" href="#转换类">转换类</a></h2>
+<p>这里就展开不介绍了，反正就是分量数据类型的转换，操作名一般为<code>cvt</code>。</p>
+<h2 id="内存读写类"><a class="header" href="#内存读写类">内存读写类</a></h2>
+<p>最后再来展开一下内存读写相关的操作。最基础的读写操作就是<code>loadu</code>和<code>storeu</code>，从某个地址中读出或写入数据，这里u指的是unaligned，也就是不要求读出和写入的内存是对齐的——因为在新架构中，对不对齐已经不影响效率了。</p>
+<p>比如说<code>__m256 _m256_loadu_ps(float const * mem_addr)</code>，就是从<code>mem_addr</code>的地址开始<strong>连续</strong>读8个float——<strong>注意：这里要求这篇连续的内存区域是合法的，否则就是UB</strong>。<code>_m256_storeu_ps</code>也类似。</p>
+<p>不过很多时候，申请的内存并不都是16, 32, 64bytes的倍数，不一定能很好地被向量所“覆盖”，于是当我们想读入或者写入剩下几个字节的时候就会很麻烦（就得逐个读到向量中）。那有什么办法呢——<strong>答案还是AVX512！</strong> AVX512提供了两个神操作<code>expendloadu</code>和<code>compressstoreu</code>，搭配掩码就可以做到内存按向量分量部分读入和写入。</p>
+<p>举个例子：</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// 这里只有7个f32，不能直接load到_m256中
+let mut arr: [f32; 7] = array_fn(|i| i as f32);
+
+// 但我们可以通过expendloadu只读低位7个f32到向量中，剩下一个分量置为0
+// ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+// │  0.0  │  6.0  │  5.0  │  4.0  │  3.0  │  2.0  │  1.0  │  0.0  │   v
+// └───────┴───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+let v = _m256_maskz_expandloadu_ps(0b01111111, addr_of!(arr).cast());
+
+// 只将向量中7个数（除了第5个分量）写入`arr`中
+// ┌───────┬───────┬───────┬───────┬───────┬───────┬───────┐ 
+// │  0.0  │  6.0  │  5.0  │  3.0  │  2.0  │  1.0  │  0.0  │   arr
+// └───────┴───────┴───────┴───────┴───────┴───────┴───────┘ 
+_m256_mask_compressstoreu_ps(addr_mut_of!(arr).cast(), 0b11101111, v);
+
+
+<span class="boring">}</span></code></pre></pre>
+<p>除了<code>load</code>和<code>store</code>，还介绍几个：</p>
+<ol>
+<li><code>broadcast</code>操作，把所有分量都置为一个值（参数）</li>
+<li><code>insert</code>操作，当然也可以直接<code>a[i] = x</code></li>
+<li><code>extract</code>操作，也可以直接通过<code>a[i]</code>读</li>
+<li><code>gather</code>操作，可以离散地读内存里的值，但不太好用。</li>
+</ol>
+<p>最后还要注意一点，这些内存读写操作都还是蛮贵的，比如一个<code>_mm256_loadu_ps</code>在Icelake架构里延迟都要去到8——所以尽量还是减少内存的读写，更多地使用SIMD给的类型。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="instruction.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="algorithm.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="instruction.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="algorithm.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
